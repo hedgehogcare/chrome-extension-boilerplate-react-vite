@@ -19,6 +19,7 @@ const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));
  */
 const manifest = {
   manifest_version: 3,
+  version_name: '0.0.2',
   default_locale: 'en',
   name: '__MSG_extensionName__',
   browser_specific_settings: {
@@ -37,26 +38,28 @@ const manifest = {
     type: 'module',
   },
   action: {
-    default_popup: 'popup/index.html',
     default_icon: 'icon-34.png',
-  },
-  chrome_url_overrides: {
-    newtab: 'new-tab/index.html',
   },
   icons: {
     128: 'icon-128.png',
   },
+  chrome_url_overrides: {
+    newtab: undefined,
+  },
+  content_security_policy: {
+    extension_pages: "script-src 'self'; style-src 'self' 'unsafe-inline';",
+  },
   content_scripts: [
     {
-      matches: ['http://*/*', 'https://*/*', '<all_urls>'],
+      matches: ['https://x.com/*'],
       js: ['content/index.iife.js'],
     },
     {
-      matches: ['http://*/*', 'https://*/*', '<all_urls>'],
+      matches: ['https://x.com/*'],
       js: ['content-ui/index.iife.js'],
     },
     {
-      matches: ['http://*/*', 'https://*/*', '<all_urls>'],
+      matches: ['https://x.com/*'],
       css: ['content.css'],
     },
   ],

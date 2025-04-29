@@ -1,11 +1,11 @@
 {
   "extensionDescription": {
     "description": "Extension description",
-    "message": "Chrome extension boilerplate developed with Vite, React and Typescript"
+    "message": "Weibo Hot Search for Crypto"
   },
   "extensionName": {
-    "description": "Extension name",
-    "message": "Chrome extension boilerplate"
+    "description": "Chainbase NO.1",
+    "message": "Trench"
   },
   "toggleTheme": {
     "message": "Toggle theme"

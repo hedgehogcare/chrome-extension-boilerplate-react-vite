@@ -26,6 +26,10 @@
     "@extension/shared": "workspace:*",
     "@extension/storage": "workspace:*",
     "@extension/ui": "workspace:*",
+    "@emotion/css": "^11.11.2",
+    "@emotion/react": "^11.13.5",
+    "@emotion/styled": "^11.13.5",
+    "@emotion/babel-preset-css-prop": "^11.12.0",
     "@extension/i18n": "workspace:*"
   },
   "devDependencies": {

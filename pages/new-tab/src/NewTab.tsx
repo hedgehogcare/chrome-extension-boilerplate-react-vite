@@ -22,7 +22,7 @@ const NewTab = () => {
         <p>
           Edit <code>pages/new-tab/src/NewTab.tsx</code>
         </p>
-        <h6>The color of this paragraph is defined using SASS.</h6>
+        <h6>The color of this paragraph is defined using SASS?</h6>
         <ToggleButton onClick={exampleThemeStorage.toggle}>{t('toggleTheme')}</ToggleButton>
       </header>
     </div>

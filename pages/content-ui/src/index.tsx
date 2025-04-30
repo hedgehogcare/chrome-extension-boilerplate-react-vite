@@ -19,7 +19,9 @@ function setup() {
     const trending: HTMLElement | null = document.querySelector(
       'div[data-testid="sidebarColumn"] section[aria-labelledby][role="region"]',
     );
+
     if (trending) {
+      const height = trending?.clientHeight;
       clearInterval(interval);
 
       trending.style.transition = 'all 0.5s ease';
@@ -34,6 +36,7 @@ function setup() {
         root.style.transition = 'all 1s ease';
         root.style.transform = 'scale(1.2) rotate(10deg)';
         root.style.opacity = '0';
+        root.style.minHeight = height + 'px';
 
         requestAnimationFrame(() => {
           root.style.transform = 'scale(1) rotate(0deg)';

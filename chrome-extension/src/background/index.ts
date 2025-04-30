@@ -6,7 +6,7 @@ exampleThemeStorage.get().then(theme => {
 });
 
 chrome.action.onClicked.addListener(() => {
-  chrome.tabs.create({ url: 'https://chainbase.com/' });
+  chrome.tabs.create({ url: 'https://trench-cb.vercel.app/' });
 });
 
 console.log('Background loaded');

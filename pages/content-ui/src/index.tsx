@@ -6,6 +6,10 @@ import { injectGlobal } from '@emotion/css';
 
 const CONTAINER_ID = 'chrome-extension-boilerplate-react-vite-content-view-root';
 
+const TrendingSelector = 'div[data-testid="sidebarColumn"] section[aria-labelledby][role="region"]';
+
+const ExplorerPageSidebarSelector = 'div[data-testid="sidebarColumn"] div[aria-label]';
+
 function setup() {
   const existingRoot = document.getElementById(CONTAINER_ID);
   if (existingRoot) {
@@ -14,26 +18,27 @@ function setup() {
   }
 
   injectGlobal({
-    'div[data-testid="sidebarColumn"] section[aria-labelledby][role="region"]': { visibility: 'hidden' },
+    [TrendingSelector]: { visibility: 'hidden' },
   });
 
   const root = document.createElement('div');
   root.id = CONTAINER_ID;
 
   const interval = setInterval(() => {
-    const trending: HTMLElement | null = document.querySelector(
-      'div[data-testid="sidebarColumn"] section[aria-labelledby][role="region"]',
-    );
+    const trending: HTMLElement | null | undefined = document.querySelector(TrendingSelector)?.parentElement;
+    const explorerPageSidebar: HTMLElement | null | undefined =
+      document.querySelector(ExplorerPageSidebarSelector)?.parentElement;
 
-    if (trending) {
-      const height = trending?.clientHeight;
+    const body: HTMLElement | null = document.querySelector('body');
+    const theme = 'rgb(0, 0, 0)' === body?.style.backgroundColor ? 'dark' : 'light';
+
+    if (window.location.pathname === '/explore' && explorerPageSidebar) {
       clearInterval(interval);
-
-      trending.replaceWith(root);
-
-      root.style.minHeight = height + 'px';
+      console.log({ l: explorerPageSidebar });
+      explorerPageSidebar?.insertBefore(root, explorerPageSidebar.firstChild);
 
       const rootIntoShadow = document.createElement('div');
+      rootIntoShadow.style.paddingTop = '12px';
       rootIntoShadow.id = 'shadow-root';
       const shadowRoot = root.attachShadow({ mode: 'open' });
 
@@ -48,7 +53,28 @@ function setup() {
       }
 
       shadowRoot.appendChild(rootIntoShadow);
-      createRoot(rootIntoShadow).render(<App />);
+      createRoot(rootIntoShadow).render(<App theme={theme} />);
+    } else if (trending) {
+      clearInterval(interval);
+
+      trending.replaceWith(root);
+
+      const rootIntoShadow = document.createElement('div');
+      rootIntoShadow.id = 'shadow-root';
+      const shadowRoot = root.attachShadow({ mode: 'open' });
+      rootIntoShadow.style.marginBottom = '16px';
+      if (navigator.userAgent.includes('Firefox')) {
+        const styleElement = document.createElement('style');
+        styleElement.innerHTML = tailwindcssOutput;
+        shadowRoot.appendChild(styleElement);
+      } else {
+        const globalStyleSheet = new CSSStyleSheet();
+        globalStyleSheet.replaceSync(tailwindcssOutput);
+        shadowRoot.adoptedStyleSheets = [globalStyleSheet];
+      }
+
+      shadowRoot.appendChild(rootIntoShadow);
+      createRoot(rootIntoShadow).render(<App theme={theme} />);
     }
   }, 500);
 }

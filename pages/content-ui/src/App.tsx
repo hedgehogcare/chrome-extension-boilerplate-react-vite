@@ -4,15 +4,15 @@ import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-quer
 
 const queryClient = new QueryClient();
 
-export default function Root() {
+export default function Root({ theme }: { theme: string }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <App />
+      <App theme={theme} />
     </QueryClientProvider>
   );
 }
 
-function App() {
+function App({ theme }: { theme: string }) {
   const { data } = useQuery({
     queryKey: ['trench-data'],
     queryFn: async () => {
@@ -34,15 +34,17 @@ function App() {
     staleTime: 1000 * 60 * 15,
   });
 
-  console.log({ data });
+  const borderColor = theme === 'dark' ? 'rgb(47, 51, 54)' : 'rgb(239, 243, 244)';
 
   return (
     <div
       style={{
-        display: 'flex',
+        display: data ? 'flex' : 'none',
         flexDirection: 'column',
         padding: '16px',
         gap: '8px',
+        border: `1px solid ${borderColor}`,
+        borderRadius: '16px',
       }}>
       <div
         style={{
@@ -97,7 +99,7 @@ function App() {
               alignItems: 'center',
               justifyContent: 'space-between',
               paddingBottom: '18px',
-              borderBottom: '1px solid #9a9a9a3e',
+              borderBottom: `1px solid ${borderColor}`,
             }}>
             <div
               style={{
@@ -195,7 +197,7 @@ function getThreeUniqueById(
 
 function timeAgo(date: Date): string {
   const now = new Date();
-  const diff = now.getTime() - date.getTime(); // 时间差，以毫秒为单位
+  const diff = now.getTime() - date.getTime();
 
   const seconds = Math.floor(diff / 1000);
   const minutes = Math.floor(seconds / 60);

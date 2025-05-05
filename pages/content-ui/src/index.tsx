@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client';
 import App from '@src/App';
 // @ts-expect-error Because file doesn't exist before build
 import tailwindcssOutput from '../dist/tailwind-output.css?inline';
+import { injectGlobal } from '@emotion/css';
 
 const CONTAINER_ID = 'chrome-extension-boilerplate-react-vite-content-view-root';
 
@@ -11,6 +12,10 @@ function setup() {
     console.log('Already injected, skip.');
     return;
   }
+
+  injectGlobal({
+    'div[data-testid="sidebarColumn"] section[aria-labelledby][role="region"]': { visibility: 'hidden' },
+  });
 
   const root = document.createElement('div');
   root.id = CONTAINER_ID;
@@ -24,46 +29,26 @@ function setup() {
       const height = trending?.clientHeight;
       clearInterval(interval);
 
-      trending.style.transition = 'all 0.5s ease';
-      trending.style.transform = 'scale(0.5) rotate(-20deg)';
-      trending.style.opacity = '0';
+      trending.replaceWith(root);
 
-      trending.addEventListener('transitionend', function handleOldTransition() {
-        trending.removeEventListener('transitionend', handleOldTransition);
+      root.style.minHeight = height + 'px';
 
-        trending.replaceWith(root);
+      const rootIntoShadow = document.createElement('div');
+      rootIntoShadow.id = 'shadow-root';
+      const shadowRoot = root.attachShadow({ mode: 'open' });
 
-        root.style.transition = 'all 1s ease';
-        root.style.transform = 'scale(1.2) rotate(10deg)';
-        root.style.opacity = '0';
-        root.style.minHeight = height + 'px';
+      if (navigator.userAgent.includes('Firefox')) {
+        const styleElement = document.createElement('style');
+        styleElement.innerHTML = tailwindcssOutput;
+        shadowRoot.appendChild(styleElement);
+      } else {
+        const globalStyleSheet = new CSSStyleSheet();
+        globalStyleSheet.replaceSync(tailwindcssOutput);
+        shadowRoot.adoptedStyleSheets = [globalStyleSheet];
+      }
 
-        requestAnimationFrame(() => {
-          root.style.transform = 'scale(1) rotate(0deg)';
-          root.style.opacity = '1';
-        });
-
-        root.addEventListener('transitionend', function handleNewTransition() {
-          root.removeEventListener('transitionend', handleNewTransition);
-        });
-
-        const rootIntoShadow = document.createElement('div');
-        rootIntoShadow.id = 'shadow-root';
-        const shadowRoot = root.attachShadow({ mode: 'open' });
-
-        if (navigator.userAgent.includes('Firefox')) {
-          const styleElement = document.createElement('style');
-          styleElement.innerHTML = tailwindcssOutput;
-          shadowRoot.appendChild(styleElement);
-        } else {
-          const globalStyleSheet = new CSSStyleSheet();
-          globalStyleSheet.replaceSync(tailwindcssOutput);
-          shadowRoot.adoptedStyleSheets = [globalStyleSheet];
-        }
-
-        shadowRoot.appendChild(rootIntoShadow);
-        createRoot(rootIntoShadow).render(<App />);
-      });
+      shadowRoot.appendChild(rootIntoShadow);
+      createRoot(rootIntoShadow).render(<App />);
     }
   }, 500);
 }

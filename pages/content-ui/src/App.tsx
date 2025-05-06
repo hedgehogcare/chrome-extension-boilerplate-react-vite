@@ -18,8 +18,7 @@ function App({ theme }: { theme: string }) {
   const { data } = useQuery({
     queryKey: ['trench-data'],
     queryFn: async () => {
-      const res = await fetch('https://mindshare.chainbase.com/api/trench_hotspots?page=1&pageSize=10');
-      const result: {
+      const res: {
         data: {
           created_at: string;
           keyword: string;
@@ -29,9 +28,9 @@ function App({ theme }: { theme: string }) {
             user_profile_image_url_https: string;
           }[];
         }[];
-      } = await res.json();
-
-      return result.data?.sort(() => Math.random() - 0.5).slice(0, 4);
+      } = await chrome.runtime.sendMessage({ type: 'FETCH_USER' });
+      console.log({ res });
+      return res.data?.sort(() => Math.random() - 0.5).slice(0, 4);
     },
     staleTime: 1000 * 60 * 15,
   });

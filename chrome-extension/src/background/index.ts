@@ -9,5 +9,20 @@ chrome.action.onClicked.addListener(() => {
   chrome.tabs.create({ url: 'https://trench-cb.vercel.app/' });
 });
 
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'FETCH_USER') {
+    fetch('https://mindshare.chainbase.com/api/trench_hotspots?page=1&pageSize=10', {
+      method: 'GET',
+    })
+      .then(res => res.json())
+      .then(data => sendResponse(data))
+      .catch(err => sendResponse({ error: err.message }));
+
+    return true;
+  }
+
+  return true;
+});
+
 console.log('Background loaded');
 console.log("Edit 'chrome-extension/src/background/index.ts' and save to reload.");

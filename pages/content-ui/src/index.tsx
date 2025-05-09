@@ -10,6 +10,8 @@ const TrendingSelector = 'div[data-testid="sidebarColumn"] section[aria-labelled
 
 const ExplorerPageSidebarSelector = 'div[data-testid="sidebarColumn"] div[aria-label]';
 
+const SearchListSelector = 'div[data-testid="sidebarColumn"] div[aria-label] > div > div:first-child';
+
 function setup() {
   const existingRoot = document.getElementById(CONTAINER_ID);
   if (existingRoot) {
@@ -19,6 +21,7 @@ function setup() {
 
   injectGlobal({
     [TrendingSelector]: { visibility: 'hidden' },
+    [SearchListSelector]: { zIndex: 100 },
   });
 
   const root = document.createElement('div');

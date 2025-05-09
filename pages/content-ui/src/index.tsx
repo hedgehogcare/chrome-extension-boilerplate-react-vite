@@ -15,7 +15,6 @@ const SearchListSelector = 'div[data-testid="sidebarColumn"] div[aria-label] > d
 function setup() {
   const existingRoot = document.getElementById(CONTAINER_ID);
   if (existingRoot) {
-    console.log('Already injected, skip.');
     return;
   }
 
@@ -37,7 +36,6 @@ function setup() {
 
     if (window.location.pathname === '/explore' && explorerPageSidebar) {
       clearInterval(interval);
-      console.log({ l: explorerPageSidebar });
       explorerPageSidebar?.insertBefore(root, explorerPageSidebar.firstChild);
 
       const rootIntoShadow = document.createElement('div');

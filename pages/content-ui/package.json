@@ -29,6 +29,7 @@
     "@extension/ui": "workspace:*",
     "@emotion/css": "^11.11.2",
     "@mui/material": "^6.1.10",
+    "@mui/icons-material": "^6.1.9",
     "@emotion/react": "^11.13.5",
     "@emotion/styled": "^11.13.5",
     "@emotion/babel-preset-css-prop": "^11.12.0",

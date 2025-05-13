@@ -4,7 +4,6 @@
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { Modal, Box } from '@mui/material';
 import { useState } from 'react';
-import CircularProgress from '@mui/material/CircularProgress';
 
 const queryClient = new QueryClient();
 

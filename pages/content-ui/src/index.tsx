@@ -6,17 +6,35 @@ import { injectGlobal } from '@emotion/css';
 
 const CONTAINER_ID = 'chrome-extension-boilerplate-react-vite-content-view-root';
 
-const TrendingSelector = 'div[data-testid="sidebarColumn"] section[aria-labelledby][role="region"]';
-
+const TrendingSelector = 'div[data-testid="sidebarColumn"] section[aria-labelledby][role="regions"]';
 const ExplorerPageSidebarSelector = 'div[data-testid="sidebarColumn"] div[aria-label]';
-
 const SearchListSelector = 'div[data-testid="sidebarColumn"] div[aria-label] > div > div:first-child > div:first-child';
 
-function setup() {
+function waitForElement(selector: string, timeout = 10000): Promise<Element> {
+  return new Promise((resolve, reject) => {
+    const el = document.querySelector(selector);
+    if (el) return resolve(el);
+
+    const observer = new MutationObserver(() => {
+      const el = document.querySelector(selector);
+      if (el) {
+        observer.disconnect();
+        resolve(el);
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    setTimeout(() => {
+      observer.disconnect();
+      reject(new Error(selector));
+    }, timeout);
+  });
+}
+
+async function setup() {
   const existingRoot = document.getElementById(CONTAINER_ID);
-  if (existingRoot) {
-    return;
-  }
+  if (existingRoot) return;
 
   injectGlobal({
     [TrendingSelector]: { visibility: 'hidden' },
@@ -26,59 +44,47 @@ function setup() {
   const root = document.createElement('div');
   root.id = CONTAINER_ID;
 
-  const interval = setInterval(() => {
-    const trending: HTMLElement | null | undefined = document.querySelector(TrendingSelector)?.parentElement;
-    const explorerPageSidebar: HTMLElement | null | undefined =
-      document.querySelector(ExplorerPageSidebarSelector)?.parentElement;
+  try {
+    const body = document.querySelector('body');
+    const theme = body?.style.backgroundColor === 'rgb(0, 0, 0)' ? 'dark' : 'light';
 
-    const body: HTMLElement | null = document.querySelector('body');
-    const theme = 'rgb(0, 0, 0)' === body?.style.backgroundColor ? 'dark' : 'light';
-
-    if (window.location.pathname === '/explore' && explorerPageSidebar) {
-      clearInterval(interval);
-      explorerPageSidebar?.insertBefore(root, explorerPageSidebar.firstChild);
-
-      const rootIntoShadow = document.createElement('div');
-      rootIntoShadow.style.paddingTop = '12px';
-      rootIntoShadow.id = 'shadow-root';
-      const shadowRoot = root.attachShadow({ mode: 'open' });
-
-      if (navigator.userAgent.includes('Firefox')) {
-        const styleElement = document.createElement('style');
-        styleElement.innerHTML = tailwindcssOutput;
-        shadowRoot.appendChild(styleElement);
-      } else {
-        const globalStyleSheet = new CSSStyleSheet();
-        globalStyleSheet.replaceSync(tailwindcssOutput);
-        shadowRoot.adoptedStyleSheets = [globalStyleSheet];
-      }
-
-      shadowRoot.appendChild(rootIntoShadow);
-      createRoot(rootIntoShadow).render(<App theme={theme} />);
-    } else if (trending) {
-      clearInterval(interval);
-
-      trending.replaceWith(root);
-
-      const rootIntoShadow = document.createElement('div');
-      rootIntoShadow.id = 'shadow-root';
-      const shadowRoot = root.attachShadow({ mode: 'open' });
-      rootIntoShadow.style.marginBottom = '16px';
-      if (navigator.userAgent.includes('Firefox')) {
-        const styleElement = document.createElement('style');
-        styleElement.innerHTML = tailwindcssOutput;
-        shadowRoot.appendChild(styleElement);
-      } else {
-        const globalStyleSheet = new CSSStyleSheet();
-        globalStyleSheet.replaceSync(tailwindcssOutput);
-        shadowRoot.adoptedStyleSheets = [globalStyleSheet];
-      }
-
-      shadowRoot.appendChild(rootIntoShadow);
-      createRoot(rootIntoShadow).render(<App theme={theme} />);
+    if (window.location.pathname === '/explore') {
+      const explorerSidebar = await waitForElement(ExplorerPageSidebarSelector);
+      const parent = explorerSidebar.parentElement;
+      if (!parent) throw new Error('Explorer sidebar parent not found');
+      parent.insertBefore(root, parent.firstChild);
+    } else {
+      const trending = await waitForElement(TrendingSelector);
+      const parent = trending.parentElement;
+      if (!parent) throw new Error('Trending parent not found');
+      parent.replaceWith(root);
     }
-  }, 500);
+
+    const rootIntoShadow = document.createElement('div');
+    rootIntoShadow.id = 'shadow-root';
+    rootIntoShadow.style.paddingTop = '12px';
+    const shadowRoot = root.attachShadow({ mode: 'open' });
+
+    if (navigator.userAgent.includes('Firefox')) {
+      const styleElement = document.createElement('style');
+      styleElement.innerHTML = tailwindcssOutput;
+      shadowRoot.appendChild(styleElement);
+    } else {
+      const globalStyleSheet = new CSSStyleSheet();
+      globalStyleSheet.replaceSync(tailwindcssOutput);
+      shadowRoot.adoptedStyleSheets = [globalStyleSheet];
+    }
+
+    shadowRoot.appendChild(rootIntoShadow);
+    createRoot(rootIntoShadow).render(<App theme={theme} />);
+  } catch (err) {
+    chrome.runtime.sendMessage({
+      type: 'SLACK_ALERT',
+      text: '⚠️ DOM 警告, 无法定位目标元素: ' + (err as Error).message + ' cc <@U06QFLV3YJY>',
+    });
+  }
 }
+
 function initPageWatcher() {
   let lastPath = location.pathname;
 

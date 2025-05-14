@@ -21,6 +21,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message.type === 'SLACK_ALERT' && message.text) {
+    fetch('https://hooks.slack.com/services/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', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text: message.text,
+      }),
+    })
+      .then(() => sendResponse({ ok: true }))
+      .catch(err => sendResponse({ ok: false, error: err.message }));
+
+    // 关键：保持异步响应通道
+    return true;
+  }
+
   return true;
 });
 

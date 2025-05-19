@@ -6,7 +6,7 @@ import { injectGlobal } from '@emotion/css';
 
 const CONTAINER_ID = 'chrome-extension-boilerplate-react-vite-content-view-root';
 
-const TrendingSelector = 'div[data-testid="sidebarColumn"] section[aria-labelledby][role="regions"]';
+const TrendingSelector = 'div[data-testid="sidebarColumn"] section[aria-labelledby][role="region"]';
 const ExplorerPageSidebarSelector = 'div[data-testid="sidebarColumn"] div[aria-label]';
 const SearchListSelector = 'div[data-testid="sidebarColumn"] div[aria-label] > div > div:first-child > div:first-child';
 
@@ -48,22 +48,27 @@ async function setup() {
     const body = document.querySelector('body');
     const theme = body?.style.backgroundColor === 'rgb(0, 0, 0)' ? 'dark' : 'light';
 
-    if (window.location.pathname === '/explore') {
+    const rootIntoShadow = document.createElement('div');
+    rootIntoShadow.id = 'shadow-root';
+    const shadowRoot = root.attachShadow({ mode: 'open' });
+
+    if (['/explore'].includes(window.location.pathname)) {
+      rootIntoShadow.style.paddingTop = '12px';
       const explorerSidebar = await waitForElement(ExplorerPageSidebarSelector);
       const parent = explorerSidebar.parentElement;
       if (!parent) throw new Error('Explorer sidebar parent not found');
+
       parent.insertBefore(root, parent.firstChild);
     } else {
       const trending = await waitForElement(TrendingSelector);
-      const parent = trending.parentElement;
-      if (!parent) throw new Error('Trending parent not found');
-      parent.replaceWith(root);
-    }
 
-    const rootIntoShadow = document.createElement('div');
-    rootIntoShadow.id = 'shadow-root';
-    rootIntoShadow.style.paddingTop = '12px';
-    const shadowRoot = root.attachShadow({ mode: 'open' });
+      if (!trending) throw new Error('Trending not found');
+      if (trending.parentElement) {
+        trending.parentElement.style.border = 'none';
+      }
+
+      trending.replaceWith(root);
+    }
 
     if (navigator.userAgent.includes('Firefox')) {
       const styleElement = document.createElement('style');

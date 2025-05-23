@@ -45,17 +45,25 @@ async function setup() {
   root.id = CONTAINER_ID;
 
   try {
-    const body = document.querySelector('body');
-    const theme = body?.style.backgroundColor === 'rgb(0, 0, 0)' ? 'dark' : 'light';
-
     const rootIntoShadow = document.createElement('div');
     rootIntoShadow.id = 'shadow-root';
     const shadowRoot = root.attachShadow({ mode: 'open' });
-
+    let theme: string;
     if (['/explore'].includes(window.location.pathname)) {
-      rootIntoShadow.style.paddingTop = '12px';
       const explorerSidebar = await waitForElement(ExplorerPageSidebarSelector);
       const parent = explorerSidebar.parentElement;
+      const body = document.querySelector('body');
+      const html = document.documentElement;
+      const colorTheme = html?.style?.['colorScheme' as unknown as number];
+
+      theme = body?.style.backgroundColor
+        ? body?.style.backgroundColor === 'rgb(255, 255, 255)'
+          ? 'light'
+          : body?.style.backgroundColor === 'rgb(21, 32, 43)'
+            ? 'dim'
+            : 'dark'
+        : colorTheme;
+      rootIntoShadow.style.paddingTop = '12px';
       if (!parent) throw new Error('Explorer sidebar parent not found');
 
       parent.insertBefore(root, parent.firstChild);
@@ -66,6 +74,18 @@ async function setup() {
       if (trending.parentElement) {
         trending.parentElement.style.border = 'none';
       }
+
+      const body = document.querySelector('body');
+      const html = document.documentElement;
+      const colorTheme = html?.style?.['colorScheme' as unknown as number];
+
+      theme = body?.style.backgroundColor
+        ? body?.style.backgroundColor === 'rgb(255, 255, 255)'
+          ? 'light'
+          : body?.style.backgroundColor === 'rgb(21, 32, 43)'
+            ? 'dim'
+            : 'dark'
+        : colorTheme;
 
       trending.replaceWith(root);
     }

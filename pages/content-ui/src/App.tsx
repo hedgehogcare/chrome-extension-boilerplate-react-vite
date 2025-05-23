@@ -38,8 +38,8 @@ function App({ theme }: { theme: string }) {
 
   const [trenchUrl, setTrenchUrl] = useState('');
 
-  const borderColor = theme === 'dark' ? 'rgb(47, 51, 54)' : 'rgb(239, 243, 244)';
-  const linkTextColor = theme === 'dark' ? '#1d9bf0' : '#1d9bf0';
+  const borderColor = theme === 'dark' ? 'rgb(47, 51, 54)' : theme === 'dim' ? 'rgb(56, 68, 77)' : 'rgb(239, 243, 244)';
+  const linkTextColor = '#1d9bf0';
 
   const needRetry = data?.length === 0 || isError;
 

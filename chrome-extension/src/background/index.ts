@@ -11,7 +11,7 @@ chrome.action.onClicked.addListener(() => {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'FETCH_USER') {
-    fetch('https://mindshare.chainbase.com/api/trench_hotspots?page=1&pageSize=10', {
+    fetch('https://api.chainbase.com/tops/v1/stories?lang=en', {
       method: 'GET',
     })
       .then(res => res.json())

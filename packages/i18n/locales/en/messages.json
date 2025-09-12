@@ -1,11 +1,11 @@
 {
   "extensionDescription": {
     "description": "Extension description",
-    "message": "Trench is an attention detection system created by Chainbase Labs and powered by AI."
+    "message": "Tops is an attention detection system created by Chainbase Labs and powered by AI."
   },
   "extensionName": {
     "description": "Chainbase NO.1",
-    "message": "Trench"
+    "message": "Tops"
   },
   "toggleTheme": {
     "message": "Toggle theme"

@@ -6,17 +6,21 @@ import { injectGlobal } from '@emotion/css';
 
 const CONTAINER_ID = 'chrome-extension-boilerplate-react-vite-content-view-root';
 
-const TrendingSelector = 'div[data-testid="sidebarColumn"] section[aria-labelledby][role="region"]';
-const ExplorerPageSidebarSelector = 'div[data-testid="sidebarColumn"] div[aria-label]';
+const TodaySelector = 'div[data-testid="sidebarColumn"] [aria-label="Trending"] [data-testid="news_sidebar"]';
+const TrendingSelector = 'div[data-testid="sidebarColumn"] [aria-label="Timeline: Trending now"]';
 const SearchListSelector = 'div[data-testid="sidebarColumn"] div[aria-label] > div > div:first-child > div:first-child';
 
-function waitForElement(selector: string, timeout = 10000): Promise<Element> {
+function waitForElement(
+  selector: string,
+  timeout = 10000,
+  fn: (selector: string) => Element | null | undefined,
+): Promise<Element> {
   return new Promise((resolve, reject) => {
-    const el = document.querySelector(selector);
+    const el = fn(selector);
     if (el) return resolve(el);
 
     const observer = new MutationObserver(() => {
-      const el = document.querySelector(selector);
+      const el = fn(selector);
       if (el) {
         observer.disconnect();
         resolve(el);
@@ -34,10 +38,12 @@ function waitForElement(selector: string, timeout = 10000): Promise<Element> {
 
 async function setup() {
   const existingRoot = document.getElementById(CONTAINER_ID);
-  if (existingRoot) return;
+
+  if (existingRoot) {
+    return;
+  }
 
   injectGlobal({
-    [TrendingSelector]: { visibility: 'hidden' },
     [SearchListSelector]: { zIndex: 100 },
   });
 
@@ -50,8 +56,17 @@ async function setup() {
     const shadowRoot = root.attachShadow({ mode: 'open' });
     let theme: string;
     if (['/explore'].includes(window.location.pathname)) {
-      const explorerSidebar = await waitForElement(ExplorerPageSidebarSelector);
-      const parent = explorerSidebar.parentElement;
+      const trending = await waitForElement(
+        TodaySelector,
+        10000,
+        (x: string) => document.querySelector(x)?.parentElement,
+      );
+
+      if (!trending) throw new Error('Trending not found');
+      if (trending.parentElement) {
+        trending.parentElement.style.border = 'none';
+      }
+
       const body = document.querySelector('body');
       const html = document.documentElement;
       const colorTheme = html?.style?.['colorScheme' as unknown as number];
@@ -63,12 +78,14 @@ async function setup() {
             ? 'dim'
             : 'dark'
         : colorTheme;
-      rootIntoShadow.style.paddingTop = '12px';
-      if (!parent) throw new Error('Explorer sidebar parent not found');
 
-      parent.insertBefore(root, parent.firstChild);
+      trending.replaceWith(root);
     } else {
-      const trending = await waitForElement(TrendingSelector);
+      const trending = await waitForElement(
+        TrendingSelector,
+        10000,
+        (x: string) => document.querySelector(x)?.parentElement,
+      );
 
       if (!trending) throw new Error('Trending not found');
       if (trending.parentElement) {

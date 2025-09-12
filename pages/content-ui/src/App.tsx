@@ -20,18 +20,18 @@ function App({ theme }: { theme: string }) {
     queryKey: ['trench-data'],
     queryFn: async () => {
       const res: {
-        data: {
-          created_at: string;
+        items: {
+          id: string;
+          first_tweet_time: string;
           keyword: string;
           score: number;
-          tweets: {
-            user_screen_name: string;
-            user_profile_image_url_https: string;
-          }[];
+          authors: string[];
         }[];
       } = await chrome.runtime.sendMessage({ type: 'FETCH_USER' });
 
-      return res.data?.sort(() => Math.random() - 0.5).slice(0, 4);
+      const result = res.items?.sort(() => Math.random() - 0.5).slice(0, 4);
+
+      return result;
     },
     staleTime: 1000 * 60 * 15,
   });
@@ -52,6 +52,7 @@ function App({ theme }: { theme: string }) {
         gap: '4px',
         border: `1px solid ${borderColor}`,
         borderRadius: '16px',
+        marginBottom: '16px',
       }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       {isPending || isFetching || isRefetching ? (
@@ -127,7 +128,7 @@ function App({ theme }: { theme: string }) {
                 fontSize: '22px',
                 fontWeight: 700,
               }}>
-              Trench
+              Tops
             </p>
             <div
               style={{
@@ -150,86 +151,10 @@ function App({ theme }: { theme: string }) {
               </p>
             </div>
           </div>
-          {data?.map((x, i) => (
-            <div key={i} style={{ padding: '12px 0px 8px' }}>
-              <p
-                onClick={() => setTrenchUrl(`https://trench-cb.vercel.app/at/${x.keyword}`)}
-                style={{
-                  fontSize: '16px',
-                  fontWeight: 600,
-                  lineHeight: '20px',
-                  marginBottom: '12px',
-                  cursor: 'pointer',
-                }}>
-                {x.keyword}
-              </p>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  paddingBottom: '18px',
-                  borderBottom: `1px solid ${borderColor}`,
-                }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    position: 'relative',
-                    height: '24px',
-                    flexGrow: 1,
-                  }}>
-                  {getThreeUniqueById(x.tweets).map((y, index) => (
-                    <div
-                      onClick={() => {
-                        window.open(`https://x.com/${y.user_screen_name}`, '_blank');
-                      }}
-                      key={index}
-                      style={{
-                        position: 'absolute',
-                        left: `${index * 16}px`,
-                        transition: 'transform 0.1s ease, z-index 0.1s',
-                        zIndex: 3 - index,
-                      }}>
-                      <img
-                        src={y.user_profile_image_url_https}
-                        alt=""
-                        style={{
-                          width: '24px',
-                          height: '24px',
-                          borderRadius: '24px',
-                          border: '1px solid white',
-                          cursor: 'pointer',
-                          transition: 'transform 0.2s ease',
-                        }}
-                        onMouseEnter={e => {
-                          const parent = e.currentTarget.parentElement!;
-                          parent.style.zIndex = '10';
-                          e.currentTarget.style.transform = 'scale(1.1)';
-                        }}
-                        onMouseLeave={e => {
-                          const parent = e.currentTarget.parentElement!;
-                          parent.style.zIndex = (3 - index).toString();
-                          e.currentTarget.style.transform = 'scale(1)';
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
-                <p
-                  style={{
-                    color: '#737A7F',
-                    fontSize: '13px',
-                    fontWeight: 500,
-                  }}>
-                  Trending now · {Math.ceil(x.score * 100)} tas · {timeAgo(new Date(x.created_at))}
-                </p>
-              </div>
-            </div>
-          ))}
+          {data?.map((x, i) => <Trench key={i} {...x} theme={theme} />)}
 
           <p
-            onClick={() => window.open('https://trench-cb.vercel.app/', '_blank')}
+            onClick={() => window.open('https://tops.chainbase.com/', '_blank')}
             style={{
               color: linkTextColor,
               fontSize: '14px',
@@ -263,26 +188,116 @@ function App({ theme }: { theme: string }) {
   );
 }
 
-function getThreeUniqueById(
-  arr: {
-    user_screen_name: string;
-    user_profile_image_url_https: string;
-  }[],
-) {
-  const seenIds = new Set();
-  const result = [];
+function Trench(x: {
+  id: string;
+  first_tweet_time: string;
+  keyword: string;
+  score: number;
+  authors: string[];
+  theme: string;
+}) {
+  const borderColor =
+    x.theme === 'dark' ? 'rgb(47, 51, 54)' : x.theme === 'dim' ? 'rgb(56, 68, 77)' : 'rgb(239, 243, 244)';
 
-  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  const { data: topAuthors = [] } = useQuery({
+    enabled: x.id !== 'profile' && x.id !== 'leaderboard',
+    queryKey: ['top-author-details', x.id],
+    queryFn: async () => {
+      try {
+        const res = await fetch(`https://api.chainbase.com/tops/api/hotspot/${x.id}/authors`);
 
-  for (const item of shuffled) {
-    if (!seenIds.has(item.user_screen_name)) {
-      seenIds.add(item.user_screen_name);
-      result.push(item);
-    }
-    if (result.length === Math.min(3, arr.length)) break;
-  }
+        const result: {
+          user_name: string;
+          user_screen_name: string;
+          user_image: string;
+          blue_verified: boolean;
+          heat_percentage: number;
+        }[] = await res.json();
 
-  return result;
+        return result.slice(0, 20);
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  return (
+    <div style={{ padding: '12px 0px 8px' }}>
+      <p
+        onClick={() => window.open(`https://tops.chainbase.com/s/${x.id}`, '_blank')}
+        style={{
+          fontSize: '16px',
+          fontWeight: 600,
+          lineHeight: '20px',
+          marginBottom: '12px',
+          cursor: 'pointer',
+        }}>
+        {x.keyword}
+      </p>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingBottom: '18px',
+          borderBottom: `1px solid ${borderColor}`,
+        }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            position: 'relative',
+            height: '22px',
+            flexGrow: 1,
+          }}>
+          {topAuthors.slice(0, 4).map((y, index) => (
+            <div
+              onClick={() => {
+                window.open(`https://x.com/${y.user_screen_name}`, '_blank');
+              }}
+              key={index}
+              style={{
+                position: 'absolute',
+                left: `${index * 14}px`,
+                transition: 'transform 0.1s ease, z-index 0.1s',
+                zIndex: 3 - index,
+              }}>
+              <img
+                src={y.user_image}
+                alt=""
+                style={{
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '22px',
+                  border: '1px solid white',
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s ease',
+                }}
+                onMouseEnter={e => {
+                  const parent = e.currentTarget.parentElement!;
+                  parent.style.zIndex = '10';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={e => {
+                  const parent = e.currentTarget.parentElement!;
+                  parent.style.zIndex = (3 - index).toString();
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              />
+            </div>
+          ))}
+        </div>
+        <p
+          style={{
+            color: '#737A7F',
+            fontSize: '13px',
+            fontWeight: 500,
+          }}>
+          Trending now · {Math.ceil(x.score * 10)} tas · {timeAgo(new Date(x.first_tweet_time))}
+        </p>
+      </div>
+    </div>
+  );
 }
 
 function timeAgo(date: Date): string {

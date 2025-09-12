@@ -16,8 +16,10 @@ export default function Root({ theme }: { theme: string }) {
 }
 
 function App({ theme }: { theme: string }) {
+  const lang = document.documentElement.getAttribute('lang');
+
   const { data, isError, refetch, isPending, isFetching, isRefetching } = useQuery({
-    queryKey: ['trench-data'],
+    queryKey: ['trench-data', lang],
     queryFn: async () => {
       const res: {
         items: {
@@ -27,7 +29,7 @@ function App({ theme }: { theme: string }) {
           score: number;
           authors: string[];
         }[];
-      } = await chrome.runtime.sendMessage({ type: 'FETCH_USER' });
+      } = await chrome.runtime.sendMessage({ type: 'FETCH_USER', lang });
 
       const result = res.items?.sort(() => Math.random() - 0.5).slice(0, 4);
 

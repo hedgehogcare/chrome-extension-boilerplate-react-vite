@@ -6,12 +6,12 @@ exampleThemeStorage.get().then(theme => {
 });
 
 chrome.action.onClicked.addListener(() => {
-  chrome.tabs.create({ url: 'https://trench-cb.vercel.app/' });
+  chrome.tabs.create({ url: 'https://tops.chainbase.com/' });
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'FETCH_USER') {
-    fetch('https://api.chainbase.com/tops/v1/stories?lang=en', {
+    fetch(`https://api.chainbase.com/tops/v1/stories?lang=${message.lang}`, {
       method: 'GET',
     })
       .then(res => res.json())

@@ -6,8 +6,10 @@ import { injectGlobal } from '@emotion/css';
 
 const CONTAINER_ID = 'chrome-extension-boilerplate-react-vite-content-view-root';
 
-const TodaySelector = 'div[data-testid="sidebarColumn"] [aria-label="Trending"] [data-testid="news_sidebar"]';
-const TrendingSelector = 'div[data-testid="sidebarColumn"] [aria-label="Timeline: Trending now"]';
+const TodaySelector = 'div[data-testid="sidebarColumn"] [aria-label][tabindex] [data-testid="news_sidebar"]';
+const ExplorePageSelectorZH = '[aria-label="推荐关注"]';
+const ExplorePageSelectorKorean = '[aria-label="팔로우 추천"]';
+const TrendingSelector = 'div[data-testid="sidebarColumn"] [aria-label][tabindex] [role="region"] [aria-label]';
 const SearchListSelector = 'div[data-testid="sidebarColumn"] div[aria-label] > div > div:first-child > div:first-child';
 
 function waitForElement(
@@ -38,6 +40,7 @@ function waitForElement(
 
 async function setup() {
   const existingRoot = document.getElementById(CONTAINER_ID);
+  const lang = document.documentElement.getAttribute('lang');
 
   if (existingRoot) {
     return;
@@ -56,19 +59,33 @@ async function setup() {
     const shadowRoot = root.attachShadow({ mode: 'open' });
     let theme: string;
     if (['/explore'].includes(window.location.pathname)) {
-      const trending = await waitForElement(
-        TodaySelector,
-        10000,
-        (x: string) => document.querySelector(x)?.parentElement,
-      );
+      if (lang === 'zh' || lang === 'ko') {
+        const explorerSidebar = await waitForElement(
+          lang === 'zh' ? ExplorePageSelectorZH : ExplorePageSelectorKorean,
+          10000,
+          (x: string) => document.querySelector(x)?.parentElement?.parentElement,
+        );
 
-      if (!trending) throw new Error('Trending not found');
-      if (trending.parentElement) {
-        trending.parentElement.style.border = 'none';
+        const parent = explorerSidebar.parentElement;
+        if (!parent || !parent.firstChild?.nextSibling) throw new Error('Explorer sidebar parent not found');
+        parent.insertBefore(root, parent.firstChild?.nextSibling);
+      } else {
+        const trending = await waitForElement(
+          TodaySelector,
+          10000,
+          (x: string) => document.querySelector(x)?.parentElement,
+        );
+
+        if (!trending) throw new Error('Trending not found');
+        if (trending.parentElement) {
+          trending.parentElement.style.border = 'none';
+        }
+        trending.replaceWith(root);
       }
 
       const body = document.querySelector('body');
       const html = document.documentElement;
+
       const colorTheme = html?.style?.['colorScheme' as unknown as number];
 
       theme = body?.style.backgroundColor
@@ -78,8 +95,6 @@ async function setup() {
             ? 'dim'
             : 'dark'
         : colorTheme;
-
-      trending.replaceWith(root);
     } else {
       const trending = await waitForElement(
         TrendingSelector,

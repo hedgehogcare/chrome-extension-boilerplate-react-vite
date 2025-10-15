@@ -70,8 +70,9 @@ async function setup() {
         if (!parent || !parent.firstChild?.nextSibling) throw new Error('Explorer sidebar parent not found');
         parent.insertBefore(root, parent.firstChild?.nextSibling);
       } else {
+        const topsSelector = lang === 'en' ? TodaySelector : TrendingSelector;
         const trending = await waitForElement(
-          TodaySelector,
+          topsSelector,
           10000,
           (x: string) => document.querySelector(x)?.parentElement,
         );
@@ -96,8 +97,9 @@ async function setup() {
             : 'dark'
         : colorTheme;
     } else {
+      const topsSelector = lang === 'en' ? TodaySelector : TrendingSelector;
       const trending = await waitForElement(
-        TrendingSelector,
+        topsSelector,
         10000,
         (x: string) => document.querySelector(x)?.parentElement,
       );
